@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
+    <data-source source="LOCAL" name="d4vj8dpuiehhuf@ec2-54-195-248-0.eu-west-1.compute.amazonaws.com" uuid="cd5fe6e1-6438-424c-b5fe-5813330b64b7">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://ec2-54-195-248-0.eu-west-1.compute.amazonaws.com:5432/d4vj8dpuiehhuf?ssl=true&amp;sslfactory=org.postgresql.ssl.NonValidatingFactory</jdbc-url>
+    </data-source>
+    <data-source source="LOCAL" name="?ssl=true&amp;sslfactory=org.postgresql.ssl.NonValidatingFactory" uuid="24931f8c-889c-4615-990d-c720b49177ea">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://ec2-79-125-2-69.eu-west-1.compute.amazonaws.com:5432/d1q9mjf3g9ieqf?ssl=true&amp;sslfactory=org.postgresql.ssl.NonValidatingFactory</jdbc-url>
+    </data-source>
+  </component>
+</project>
