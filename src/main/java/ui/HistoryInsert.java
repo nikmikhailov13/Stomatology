@@ -1,7 +1,6 @@
 package ui;
 
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Insets;
@@ -20,123 +19,101 @@ import sql.SQLController;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class HistoryInsert {
 
     private Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
-    private final double width = primaryScreenBounds.getWidth()/2.3;
-    private final double height = primaryScreenBounds.getHeight()/1.5;
+    private final double width = primaryScreenBounds.getWidth() / 2.3;
+    private final double height = primaryScreenBounds.getHeight() / 2.5;
     private Stage stage;
     private Scene scene;
     private StackPane stackPane;
-    private VBox vBox, vBox1, vBox2, vBox3;
-    private HBox hBox1, hBox2, hBox3, hBox4;
-    private Label diagnose1, diagnose2, diagnose3;
-    private ComboBox<String> comboBox1, comboBox2, comboBox3;
-    private TextArea textArea1, textArea2, textArea3;
+    private VBox vBox, vBox1;
+    private HBox hBox1, hBox2;
+    private ComboBox<String> comboBox1, comboBox2, comboBox3, comboBox4;
+    private TextArea textArea1;
     private Button save;
     private DatePicker datePicker;
     private Label message;
     private Client client;
     private PatientInfo patientInfo;
-    private ObservableList<String> items;
+    private ObservableList<String> ilnesses, treatments;
 
-    public HistoryInsert (Client client, PatientInfo patientInfo) {
+    public HistoryInsert(Client client, PatientInfo patientInfo) {
         this.client = client;
         this.patientInfo = patientInfo;
 
         stage = new Stage();
         stackPane = new StackPane();
         scene = new Scene(stackPane, width, height);
+
         vBox = new VBox(20);
         vBox1 = new VBox(10);
-        vBox2 = new VBox(10);
-        vBox3 = new VBox(10);
-
         hBox1 = new HBox(10);
         hBox2 = new HBox(10);
-        hBox3 = new HBox(10);
-        hBox4 = new HBox(10);
-
-        diagnose1 = new Label("Діагноз 1");
-        diagnose2 = new Label("Діагноз 2");
-        diagnose3 = new Label("Діагноз 3");
 
         comboBox1 = new ComboBox<>();
         comboBox2 = new ComboBox<>();
         comboBox3 = new ComboBox<>();
+        comboBox4 = new ComboBox<>();
 
         textArea1 = new TextArea();
-        textArea2 = new TextArea();
-        textArea3 = new TextArea();
 
         save = new Button("Зберегти");
         datePicker = new DatePicker();
         message = new Label("");
     }
 
-    public void  showInterface () {
-       stage.setTitle("Stomatology: Додавання запису");
-       stage.getIcons().add( new Image( Entrance.class.getResourceAsStream("/teeth.png")));
-       stackPane.setPadding(new Insets(20));
+    public void showInterface() {
+        stage.setTitle("Stomatology: Додавання запису");
+        stage.getIcons().add(new Image(Entrance.class.getResourceAsStream("/teeth.png")));
+        stackPane.setPadding(new Insets(20));
 
         SQLController sqlController = new SQLController();
-       items = sqlController.getListOf("SELECT name FROM diagnoses");
-       addItemsToBoxes();
-       setItems();
-       save.setOnAction(event -> saveData());
-       stage.setScene(scene);
-       stage.show();
+        ilnesses = sqlController.getListOf("SELECT name FROM diagnoses ORDER BY name");
+        treatments = sqlController.getListOf("SELECT treatment FROM treatments ORDER BY treatment");
+        addItemsToBoxes();
+        setItems();
+        save.setOnAction(event -> saveData());
+        stage.setScene(scene);
+        stage.show();
 
     }
 
-    private void addItemsToBoxes () {
+    private void addItemsToBoxes() {
 
-        textArea1.setPrefWidth(width/2.2);
-        textArea2.setPrefWidth(width/2.2);
-        textArea3.setPrefWidth(width/2.2);
-
-        hBox1.getChildren().addAll(comboBox1, textArea1);
-        hBox2.getChildren().addAll(comboBox2, textArea2);
-        hBox3.getChildren().addAll(comboBox3, textArea3);
-
+        textArea1.setPrefWidth(width / 2);
+        datePicker.setPrefWidth(width / 2.3);
         datePicker.setValue(LocalDate.now());
-        datePicker.setPrefWidth(width/2.75);
-        message.setPrefWidth(width/2.65);
-        save.setPrefWidth(width/5.5);
+        message.setPrefWidth(width / 2.65);
+        save.setPrefWidth(width / 5.5);
         save.setTextFill(Color.GREEN);
-        hBox4.getChildren().addAll(datePicker, message, save);
 
-        vBox.getChildren().addAll(hBox1, hBox2, hBox3, hBox4);
-        stackPane.getChildren().add(vBox);
+        vBox1.getChildren().addAll(datePicker, comboBox1, comboBox2, comboBox3, comboBox4, save, message);
+        hBox1.getChildren().addAll(vBox1, textArea1);
+        stackPane.getChildren().add(hBox1);
     }
 
-    private void setItems(){
+    private void setItems() {
 
-        setComboBox(comboBox1, "Діагноз 1");
-        setComboBox(comboBox2, "Діагноз 2");
-        setComboBox(comboBox3, "Діагноз 3");
+        setComboBox(comboBox1, "Діагноз", ilnesses);
+        setComboBox(comboBox2, "Лікування 1", treatments);
+        setComboBox(comboBox3, "Лікування 2", treatments);
+        setComboBox(comboBox4, "Лікування 3", treatments);
 
-        textArea1.setPromptText("Додайте нотатки");
-        textArea2.setPromptText("Додайте нотатки");
-        textArea3.setPromptText("Додайте нотатки");
-
+        textArea1.setPromptText("Анамнез, статус, рекомендації");
         message.setAlignment(Pos.BOTTOM_CENTER);
-
-
     }
 
-    private void setComboBox(ComboBox<String> cb, String promptText) {
+    private void setComboBox(ComboBox<String> cb, String promptText, ObservableList<String> items) {
         cb.setEditable(true);
-        cb.setPrefWidth(width/2);
-        cb.setPromptText(promptText);
+        cb.setPrefWidth(width / 2.3);
 
 
         // Create a FilteredList wrapping the ObservableList.
-        FilteredList<String> filteredItems = new FilteredList<String>(items, p -> true);
+        FilteredList<String> filteredItems = new FilteredList<>(items, p -> true);
 
         // Add a listener to the textProperty of the combobox editor. The
         // listener will simply filter the list every time the input is changed
@@ -166,9 +143,10 @@ public class HistoryInsert {
         });
 
         cb.setItems(filteredItems);
+        cb.setPromptText(promptText);
     }
 
-    private void saveData () {
+    private void saveData() {
         message.setText("");
         try {
             setClientHistory();
@@ -181,36 +159,48 @@ public class HistoryInsert {
         }
     }
 
-    private void setClientHistory () throws SQLException {
-        List<ComboBox> comboBoxes = Arrays.asList(comboBox1, comboBox2, comboBox3);
-        List<TextArea> textAreas = Arrays.asList(textArea1, textArea2, textArea3);
+    private void setClientHistory() throws SQLException {
+
         SQLController sqlController = new SQLController();
 
+        List<ComboBox> comboBoxes = Arrays.asList(comboBox2, comboBox3, comboBox4);
+
+        String treatmentList = "";
 
         for (int i = 0; i < 3; i++) {
-            if (comboBoxes.get(i).getValue()!= null) {
-                String diagnose = comboBoxes.get(i).getValue().toString();
 
-                if (!diagnoseExists(diagnose)){
-                    sqlController.addDiagnose(diagnose);
-                }
+            if (comboBoxes.get(i).getValue() != null) {
+                String treatment = comboBoxes.get(i).getValue().toString();
+                treatmentList += treatment + "\n";
 
-                java.sql.Date date = java.sql.Date.valueOf(datePicker.getValue());
-                String notes = textAreas.get(i).getText();
-
-
-                    sqlController.setClientHistory(client.getId(), diagnose, date, notes);
-
+                if (!exists(treatment, treatments))
+                    sqlController.addTreatment(treatment);
             }
         }
+
+        String diagnose = comboBox1.getValue();
+        if (diagnose != null) {
+            if (!exists(diagnose, ilnesses)) {
+                sqlController.addDiagnose(diagnose);
+            }
+        }
+
+
+        java.sql.Date date = java.sql.Date.valueOf(datePicker.getValue());
+        String notes = textArea1.getText();
+
+
+        sqlController.setClientHistory(client.getId(), diagnose, date, notes, treatmentList);
+
     }
 
-    private boolean diagnoseExists (String diagnose) {
+
+    private boolean exists(String item, ObservableList<String> items) {
 
         boolean answer = false;
 
         for (int i = 0; i < items.size(); i++) {
-            if (items.get(i).equals(diagnose))
+            if (items.get(i) != null && items.get(i).toLowerCase().equals(item.toLowerCase()))
                 answer = true;
         }
         return answer;

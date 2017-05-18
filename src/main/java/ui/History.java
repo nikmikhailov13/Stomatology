@@ -11,12 +11,14 @@ public class History {
     private Date date;
     private SimpleStringProperty diagnose;
     private SimpleStringProperty notes;
+    private SimpleStringProperty treatment;
     private int id;
 
 
-    public History (Date date, String diagnose, String notes, int id) {
+    public History (Date date, String diagnose, String treatment, String notes, int id) {
         this.date = date;
         this.diagnose = new SimpleStringProperty(diagnose);
+        this.treatment = new SimpleStringProperty(treatment);
         this.notes = new SimpleStringProperty(notes);
         this.id = id;
     }
@@ -47,6 +49,18 @@ public class History {
 
     public void setDiagnose(String diagnose) {
         this.diagnose.set(diagnose);
+    }
+
+    public String getTreatment() {
+        return treatment.get();
+    }
+
+    public SimpleStringProperty treatmentProperty() {
+        return treatment;
+    }
+
+    public void setTreatment(String treatment) {
+        this.treatment.set(treatment);
     }
 
     public String getNotes() {

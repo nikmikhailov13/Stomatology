@@ -19,8 +19,6 @@ public class SQLController {
     private DBWorker dbWorker;
     private final String INSERTION = "INSERT INTO client (t11, t12, t13, t14, t15, t16, t17, t18, t21, t22, t23, t24, t25, t26, t27, t28, t31, t32, t33, t34, t35, t36, t37, t38, t41, t42, t43, t44, t45, t46, t47, t48, name, bdate, phone, email, ilnesses, scargy, prikus, gigiene, teeth_color, home, doctor, sex, currentilness, investigationdata, xray, dateofteaching, dateofcontrol, diagnose)  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?," +
             "?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-   // private final String QUERY = "SELECT * FROM client ORDER BY name ";
-    private final String GET_CLIENT = "SELECT * FROM client WHERE id = ?";
     private final String UPDATE_CLIENT = "UPDATE client SET t11=?, t12=?, t13=?, t14=?, t15=?, t16=?, t17=?, t18=?," +
             "t21=?, t22=?, t23=?, t24=?, t25=?, t26=?, t27=?, t28=?, t31=?, t32=?, t33=?, t34=?, t35=?, t36=?, t37=?, t38=?," +
             "t41=?, t42=?, t43=?, t44=?, t45=?, t46=?, t47=?, t48=?, " +
@@ -46,11 +44,11 @@ public class SQLController {
     private final String INSERT_PHOTO = "INSERT INTO photo VALUES (?,?,?)";
     private final String PHOTO_QUERY = "SELECT * FROM photo WHERE id_client=?";
 
-    private final String HISTORY_INSERTION = "INSERT INTO history VALUES (?, ?, ?, ?)";
-    private final String HISTORY_QUERY = "SELECT date, diagnose, notes, id FROM history WHERE id_client = ?";
-    private final String HISTORY_UPDATE = "UPDATE history SET  diagnose = ?, date = ?,  notes = ? WHERE id = ?";
+    private final String HISTORY_INSERTION = "INSERT INTO history (id_client, diagnose, date, notes,  treatment) VALUES (?, ?, ?, ?, ?)";
+    private final String HISTORY_QUERY = "SELECT * FROM history WHERE id_client = ?";
 
-
+    private final String PROTEZ_INSERTION = "INSERT INTO protez VALUES (?, ?, ?)";
+    private final String PROTEZ_QUERY = "SELECT * FROM protez WHERE id_client = ?";
 
     private PreparedStatement preparedStatement = null;
     private ResultSet resultSet;
@@ -61,11 +59,12 @@ public class SQLController {
     private ObservableList<Photo> photos = FXCollections.observableArrayList();
     private ObservableList<String> teeth = FXCollections.observableArrayList();
     private ObservableList<History> history = FXCollections.observableArrayList();
+    private ObservableList<Protez> protezes = FXCollections.observableArrayList();
+
 
     public SQLController() {
         dbWorker = new DBWorker();
     }
-
 
     //clients
     public void addClient(ObservableList<String> teeth, String name, Date birthdate, String home, String phone, String email, String ilnesses, String scargy, String prikus, String gigiene, String teeth_color, String doctor, String sex, String currentIlness, String investigationData, String xRay, String dateOfTeaching, String dateOfControl, String diagnose) throws SQLException {
@@ -368,12 +367,13 @@ public class SQLController {
 
 
     //history
-    public void setClientHistory(int id_client, String diagnose, Date date, String notes) throws SQLException {
+    public void setClientHistory(int id_client, String diagnose, Date date, String notes, String treatment) throws SQLException {
         preparedStatement = dbWorker.getConnection().prepareStatement(HISTORY_INSERTION);
         preparedStatement.setInt(1, id_client);
         preparedStatement.setString(2, diagnose);
         preparedStatement.setDate(3, date);
         preparedStatement.setString(4, notes);
+        preparedStatement.setString(5, treatment);
         preparedStatement.execute();
     }
 
@@ -383,24 +383,37 @@ public class SQLController {
         resultSet = preparedStatement.executeQuery();
 
         while (resultSet.next()) {
-            History historyItem = new History(resultSet.getDate(1), resultSet.getString(2),
-                    resultSet.getString(3), resultSet.getInt(4));
+            History historyItem = new History(resultSet.getDate("date"), resultSet.getString("diagnose"),
+                    resultSet.getString("treatment"), resultSet.getString("notes"), resultSet.getInt("id"));
             history.add(historyItem);
         }
         return  history;
     }
 
-    public void updateHistory(String diagnose, Date date, String notes, int id) {
+    public void setClientProtez(Date date, String protez, int id_client) throws SQLException {
+
+        preparedStatement = dbWorker.getConnection().prepareStatement(PROTEZ_INSERTION);
+        preparedStatement.setDate(1, date);
+        preparedStatement.setString(2, protez);
+        preparedStatement.setInt(3, id_client);
+        preparedStatement.execute();
+    }
+
+    public ObservableList<Protez> getClientProtez (int id_client)  {
         try {
-            preparedStatement = dbWorker.getConnection().prepareStatement(HISTORY_UPDATE);
-            preparedStatement.setString(1, diagnose);
-            preparedStatement.setDate(2, date);
-            preparedStatement.setString(3, notes);
-            preparedStatement.setInt(4, id);
-            preparedStatement.execute();
+            preparedStatement = dbWorker.getConnection().prepareStatement(PROTEZ_QUERY);
+            preparedStatement.setInt(1, id_client);
+            resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                Protez protez = new Protez(resultSet.getDate("date"), resultSet.getString("protez"), resultSet.getInt("id_client"), resultSet.getInt("id"));
+                protezes.add(protez);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return protezes;
     }
+
 }
 

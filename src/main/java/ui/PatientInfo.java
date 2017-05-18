@@ -7,7 +7,6 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
-import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -17,7 +16,6 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
@@ -33,7 +31,6 @@ import sql.SQLController;
 
 import java.io.*;
 import java.sql.*;
-import java.sql.Date;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.List;
@@ -53,20 +50,20 @@ public class PatientInfo {
     private ComboBox<String> doctorComboBox, sexComboBox, diagnoseComboBox;
     private TextArea ilnessesText, gigieneText, scargyText, currentIlnessText, investigationDataText, xRayText, label14Text, label15Text ;
     private Label nameLabel,sexLabel, bDateLabel, homeLabel, phoneLabel,  emailLabel, diagnoseLabel, ilnessesLabel, currentIlness, investigationData,  teethLabel, prikusLabel,
-            gigieneLabel, xRay, colorLabel, doctorLabel, scargyLabel, messageLabel, messageLabel1, label14, label15;
+            gigieneLabel, xRay, colorLabel, doctorLabel, scargyLabel, messageLabel, messageLabel1, messageLabel2, label14, label15;
     private HBox hBox1, hBox2, hBox3, hBox4, hBox5, hBox6, hBox7, hBox8, hBox9, hBox10, hBox11, hBox12, hBox13, hBox14, hBox15, hBox16, hBox17, hBox18, upperTeethHBox, lowTeethHBox;
     private VBox vBox1, vBox2, teethVBox;
     private Separator separator, separator1, separator2, separator3;
-    private ScrollPane scrollPane;
+    private ScrollPane scrollPane, historyScrollPane;
     private Button saveButton,saveButton1,saveButton2, addHistory, choosePhoto, addPhoto, addProtez;
     private TabPane tabPane;
     private Tab teethTab, historyTab, protezTab;
     private ObservableList<String> photosList = FXCollections.observableArrayList();
     private ObservableList<String> teeth = FXCollections.observableArrayList();
-    private ObservableList<String> doctors = FXCollections.observableArrayList();
     private TableView historyTableView, photoTableView, protezTableView;
     private ObservableList<History> history = FXCollections.observableArrayList();
     private ObservableList<Photo> photos = FXCollections.observableArrayList();
+    private ObservableList<Protez> protezes = FXCollections.observableArrayList();
     private FileChooser fileChooser;
     private File photoFile;
     private SQLController sqlController = new SQLController();
@@ -79,6 +76,7 @@ public class PatientInfo {
         stage = new Stage();
         layout = new BorderPane();
         teethPane = new BorderPane();
+        historyScrollPane = new ScrollPane();
         scene = new Scene(layout, width, height);
         nameTF = new TextField();
         homeTF = new TextField();
@@ -185,6 +183,7 @@ public class PatientInfo {
         scrollPane.setPrefWidth(width / 2 - 150);
         layout.setPadding(new Insets(10));
 
+
         tabPane = new TabPane();
         historyTab = new Tab();
         teethTab = new Tab();
@@ -249,6 +248,7 @@ public class PatientInfo {
         protezTab = new Tab();
         saveButton2 = new Button("Зберегти зміни");
         addProtez = new Button("Додати запис");
+        messageLabel2 = new Label("");
         protezTableView = new TableView();
 
         toothModelList1 = Arrays.asList(t11, t12, t13, t14, t15, t16, t17, t18, t21, t22, t23, t24, t25, t26, t27, t28);
@@ -299,6 +299,7 @@ public class PatientInfo {
         initTeeth(client);
         initPhotoTable(client);
         initHistoryTable(client);
+        initProtezTable(client);
     }
 
     public void show() {
@@ -316,12 +317,17 @@ public class PatientInfo {
             existingPatient.refresh();
 
         });
-        addPhoto.setOnAction(e -> {
-            messageLabel.setText("Фото можна додавати тільки до існуючих пацієнтів!");
+        saveButton2.setOnAction(event -> {
+            saveData();
+            existingPatient.refresh();
+
         });
+        addPhoto.setOnAction(e -> messageLabel.setText("Фото можна додавати тільки до існуючих пацієнтів!"));
 
         addHistory.setOnAction(event ->
             messageLabel1.setText("Діагнози можна додавати до існуючих пацієнтів!"));
+
+        addProtez.setOnAction(e -> messageLabel2.setText("Протезування можна додавати тільки до існуючих пацієнтів!"));
     }
 
     public void setButtonsUpdate(Client client, ExistingPatient existingPatient) {
@@ -356,6 +362,11 @@ public class PatientInfo {
             addHistory.setOnAction(event -> {
                 HistoryInsert historyInsert = new HistoryInsert(client, this);
                 historyInsert.showInterface();
+            });
+
+            addProtez.setOnAction(event -> {
+                ProtezInsert protezInsert = new ProtezInsert(client, this);
+                protezInsert.showInterface();
             });
 
 
@@ -459,7 +470,10 @@ public class PatientInfo {
         hBox.setPadding(new Insets(10, 20, 0, 20));
 
         hBox.getChildren().addAll(addHistory, saveButton1, messageLabel1);
-        borderPane.setCenter(historyTableView);
+        historyScrollPane.setContent(historyTableView);
+        historyScrollPane.setFitToHeight(true);
+        historyScrollPane.setMinHeight(height - 150);
+        borderPane.setTop(historyScrollPane);
         borderPane.setBottom(hBox);
         historyTab.setContent(borderPane);
     }
@@ -470,19 +484,24 @@ public class PatientInfo {
         HBox hBox = new HBox(10);
         hBox.setPrefHeight(50);
         hBox.setPadding(new Insets(10, 20, 0, 20));
-        hBox.getChildren().addAll(addProtez, saveButton2);
+        hBox.getChildren().addAll(addProtez, saveButton2, messageLabel2);
         saveButton2.setPrefHeight(40);
         saveButton2.setTextFill(Color.GREEN);
         addProtez.setPrefHeight(40);
 
         createPtotezTable();
-        borderPane.setCenter(protezTableView);
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setMinHeight(height-150);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setContent(protezTableView);
+        borderPane.setTop(scrollPane);
         borderPane.setBottom(hBox);
         protezTab.setContent(borderPane);
 
     }
 
     private void initTeeth(Client client) {
+        teeth.clear();
         teeth = sqlController.getTeeth(client.getId());
 
         for (int i = 0; i < 16; i++) {
@@ -501,14 +520,20 @@ public class PatientInfo {
         TableColumn<History, String> diagnose = new TableColumn<>("Діагноз");
         diagnose.setCellValueFactory(new PropertyValueFactory<>("diagnose"));
 
-        TableColumn<History, String> note = new TableColumn<>("Примітки");
+        TableColumn<History, String> treatment = new TableColumn<>("Лікування");
+        treatment.setCellValueFactory(new PropertyValueFactory<>("treatment"));
+
+        TableColumn<History, String> note = new TableColumn<>("Анамнез, статус, рекомендації");
         note.setCellValueFactory(new PropertyValueFactory<>("notes"));
 
-        historyTableView.getColumns().addAll(date, diagnose, note);
+//        date.setPrefWidth(width / 14);
+          diagnose.setPrefWidth(width / 8);
+          treatment.setPrefWidth(width / 8);
+          note.setPrefWidth(width / 3);
 
-        date.setPrefWidth(width / 2 / 6);
-        diagnose.setPrefWidth(width / 2 / 2.2);
-        note.setPrefWidth(width / 2 / 2.2);
+        historyTableView.getColumns().addAll(date, diagnose, treatment, note);
+
+
 
 
     }
@@ -521,6 +546,7 @@ public class PatientInfo {
             e.printStackTrace();
         }
         historyTableView.setItems(history);
+
 
         historyTableView.setOnKeyPressed( e-> {
             if (e.getCode() == KeyCode.BACK_SPACE){
@@ -557,14 +583,31 @@ public class PatientInfo {
         });
     }
 
-    private void initProtezTable (Client client) {
+    public void initProtezTable (Client client) {
+        protezes.clear();
+        protezes = sqlController.getClientProtez(client.getId());
+        protezTableView.setItems(protezes);
+        System.out.println(protezes.toString());
+
+        protezTableView.setOnKeyPressed( e-> {
+            if (e.getCode() == KeyCode.BACK_SPACE){
+                Protez protez = (Protez) protezTableView.getSelectionModel().getSelectedItem();
+                boolean confirm = Dialog.showConfirmationDialog("Видалення запису", "Ви впевнені, що хочете видалити?",
+                        "Будь ласка, підтвердіть свої діі");
+                if (confirm) {
+                    sqlController.deleteFromTable(protez.getId(), "DELETE FROM protez WHERE id = ?");
+                    initProtezTable(client);
+                }
+            }
+        });
+
 
     }
 
     private void createPhotoTableView(){
         TableColumn<Photo, String> comment = new TableColumn<>("Фото пацієнта");
         comment.setCellValueFactory(new PropertyValueFactory<>("comment"));
-        photoTableView.getColumns().addAll(comment);
+        photoTableView.getColumns().add(comment);
         comment.setPrefWidth(width / 2.01);
 
     }
@@ -576,18 +619,14 @@ public class PatientInfo {
         TableColumn<Protez, String> protez = new TableColumn<>("Протезування");
         protez.setCellValueFactory(new PropertyValueFactory<>("protez"));
 
-        date.setPrefWidth(width/12);
-        protez.setPrefWidth(width/2.5);
+        date.setPrefWidth(width/14);
+        protez.setPrefWidth(width/1.8);
         protezTableView.getColumns().addAll(date, protez);
-
     }
 
     private void saveData() {
         if ( (nameTF.getText().equals(""))) {
-            messageLabel.setText("Введіть усі необхідні дані!");
-            messageLabel1.setText("Введіть усі необхідні дані!");
-            messageLabel.setTextFill(Color.RED);
-            messageLabel1.setTextFill(Color.RED);
+          notEnoughDataForSaving();
         } else {
 
             java.sql.Date date;
@@ -595,29 +634,16 @@ public class PatientInfo {
                 date = java.sql.Date.valueOf(LocalDate.now());
             } else date = java.sql.Date.valueOf(bDate.getValue());
 
-            ObservableList<String> teeth = FXCollections.observableArrayList();
-            for (int i = 0; i < 16; i++) {
-                teeth.add(toothModelList1.get(i).getText().toString());
-            }
-            for (int i = 0; i < 16; i++) {
-                teeth.add(toothModelList2.get(i).getText().toString());
-            }
-
+            gatheringTeeth();
             try {
                 sqlController.addClient(teeth, nameTF.getText(), date, homeTF.getText(), phoneTF.getText(), emailTF.getText(),
                     ilnessesText.getText(), scargyText.getText(), prikusTF.getText(), gigieneText.getText(), colorTF.getText(), doctorComboBox.getValue(),
                         sexComboBox.getValue(), currentIlnessText.getText(), investigationDataText.getText(), xRayText.getText(),
                         label14Text.getText(), label15Text.getText(), diagnoseComboBox.getValue());
-                messageLabel.setText("Дані успішно збережено!");
-                messageLabel1.setText("Дані успішно збережено!");
-                messageLabel.setTextFill(Color.GREEN);
-                messageLabel1.setTextFill(Color.GREEN);
+                successfullySave();
             } catch (SQLException e) {
                 e.printStackTrace();
-                messageLabel.setText("Помилка");
-                messageLabel.setTextFill(Color.RED);
-                messageLabel1.setText("Помилка");
-                messageLabel1.setTextFill(Color.RED);
+                unsuccessfullySave();
             }
             pauseAndClose();
         }
@@ -625,38 +651,19 @@ public class PatientInfo {
 
     private void updateData(Client client) {
         if ((bDate.getValue() == null) || (nameTF.getText().equals(""))) {
-            messageLabel.setText("Введіть усі необхідні дані!");
-            messageLabel.setTextFill(Color.RED);
-            messageLabel1.setText("Введіть усі необхідні дані!");
-            messageLabel1.setTextFill(Color.RED);
+            notEnoughDataForSaving();
         } else {
             java.sql.Date date = java.sql.Date.valueOf(bDate.getValue());
-            ObservableList<String> teeth = FXCollections.observableArrayList();
-            for (int i = 0; i < 16; i++) {
-                teeth.add(toothModelList1.get(i).getText().toString());
-            }
-            for (int i = 0; i < 16; i++) {
-                teeth.add(toothModelList2.get(i).getText().toString());
-            }
-
+            gatheringTeeth();
             try {
                 sqlController.updateClient(teeth, client.getId(), nameTF.getText(), date, homeTF.getText(), phoneTF.getText(), emailTF.getText(),
                         ilnessesText.getText(), scargyText.getText(), prikusTF.getText(), gigieneText.getText(), colorTF.getText(), doctorComboBox.getValue(), sexComboBox.getValue(), currentIlnessText.getText(), investigationDataText.getText(), xRayText.getText(),
                         label14Text.getText(), label15Text.getText(), diagnoseComboBox.getValue());
 
-
-
-
-                messageLabel.setText("Дані успішно збережено!");
-                messageLabel.setTextFill(Color.GREEN);
-                messageLabel1.setText("Дані успішно збережено!");
-                messageLabel1.setTextFill(Color.GREEN);
+                successfullySave();
             } catch (SQLException e) {
                 e.printStackTrace();
-                messageLabel.setText("Помилка");
-                messageLabel1.setText("Помилка");
-                messageLabel1.setTextFill(Color.RED);
-                messageLabel.setTextFill(Color.RED);
+                unsuccessfullySave();
             }
         }
 
@@ -716,4 +723,40 @@ public class PatientInfo {
         imageViewer.showInterface();
     }
 
+    private void gatheringTeeth() {
+        teeth.clear();
+        for (int i = 0; i < 16; i++) {
+            teeth.add(toothModelList1.get(i).getText());
+        }
+        for (int i = 0; i < 16; i++) {
+            teeth.add(toothModelList2.get(i).getText());
+        }
+    }
+
+    private void successfullySave() {
+        messageLabel.setText("Дані успішно збережено!");
+        messageLabel1.setText("Дані успішно збережено!");
+        messageLabel2.setText("Дані успішно збережено!");
+        messageLabel.setTextFill(Color.GREEN);
+        messageLabel1.setTextFill(Color.GREEN);
+        messageLabel2.setTextFill(Color.GREEN);
+    }
+
+    private void unsuccessfullySave() {
+        messageLabel.setText("Помилка");
+        messageLabel.setTextFill(Color.RED);
+        messageLabel1.setText("Помилка");
+        messageLabel1.setTextFill(Color.RED);
+        messageLabel2.setText("Помилка");
+        messageLabel2.setTextFill(Color.RED);
+    }
+
+    private void notEnoughDataForSaving () {
+        messageLabel.setText("Введіть усі необхідні дані!");
+        messageLabel1.setText("Введіть усі необхідні дані!");
+        messageLabel2.setText("Введіть усі необхідні дані!");
+        messageLabel.setTextFill(Color.RED);
+        messageLabel1.setTextFill(Color.RED);
+        messageLabel2.setTextFill(Color.RED);
+    }
 }
