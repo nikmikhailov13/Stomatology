@@ -7,5 +7,7 @@ the work of staff, reduce the time and money costs for customer service.
 It contains a dental map, a patient database, a list of doctors, editable database of treatments and diagnoses, 
 an integrated Google calendar for visits scheduling, an automatic mailing system and statistics.
 
+![Entrance](https://github.com/nikmikhailov13/Stomatology/raw/new_branch/dcreenshots/1.png)
+
 
 ###### © 2017, Nikita Mykhailov
