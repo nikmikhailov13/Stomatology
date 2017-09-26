@@ -11,7 +11,7 @@ public class Main extends Application {
 
     public void start(Stage primaryStage) throws Exception {
 
-      MainMenu mainMenu = new MainMenu();
-      mainMenu.showInterface();
+      Entrance entrance = new Entrance(primaryStage);
+      entrance.showInterface();
     }
 }
